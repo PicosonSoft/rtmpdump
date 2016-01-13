@@ -26,6 +26,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 #include <signal.h>		// to catch Ctrl-C
 #include <getopt.h>
@@ -34,14 +35,18 @@
 #include "librtmp/log.h"
 
 #ifdef WIN32
+#ifdef _MSC_VER
+#define fseeko _fseeki64
+#define ftello _ftelli64
+#endif
+#ifdef __MINGW32__
 #define fseeko fseeko64
 #define ftello ftello64
-#ifdef __MINGW32__
 #define off_t off64_t
 #endif
 #include <io.h>
 #include <fcntl.h>
-#define	SET_BINMODE(f)	setmode(fileno(f), O_BINARY)
+#define	SET_BINMODE(f)	_setmode(_fileno(f), O_BINARY)
 #else
 #define	SET_BINMODE(f)
 #endif
@@ -281,7 +286,11 @@ GetLastKeyframe(FILE * file,	// output file [in]
 		int *initialFrameType,	// initial frame type (audio/video) [out]
 		uint32_t * nInitialFrameSize)	// length of initialFrame [out]
 {
+#ifndef _MSC_VER
   const size_t bufferSize = 16;
+#else
+#define bufferSize 16
+#endif
   char buffer[bufferSize];
   uint8_t dataType;
   int bAudioOnly;
@@ -489,7 +498,9 @@ GetLastKeyframe(FILE * file,	// output file [in]
     }
 
   //}
-
+#ifdef _MSC_VER
+#undef bufferSize
+#endif
   return RD_SUCCESS;
 }
 
