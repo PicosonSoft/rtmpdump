@@ -3,7 +3,8 @@ project(rtmpdump)
 
 set(HTTP_PROXY "" CACHE STRING "HTTP proxy for package downloading.")
 
-list(APPEND CMAKE_PREFIX_PATH "c:/Code/AeonGames/runtime")
+set(RUNTIME_PATH "${CMAKE_SOURCE_DIR}/runtime" CACHE PATH "Optional Path to look for libraries, headers and binaries.")
+list(APPEND CMAKE_PREFIX_PATH "${RUNTIME_PATH}")
 
 if(MSVC)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NO_POSIX_ERROR_CODES)
