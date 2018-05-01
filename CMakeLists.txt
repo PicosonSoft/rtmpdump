@@ -39,25 +39,25 @@ add_library(rtmp STATIC
 	librtmp/log.h)
 	
 add_executable(rtmpdump rtmpdump.c ${GETOPT_SRCS})
-target_link_libraries(rtmpdump rtmp ws2_32 winmm gdi32 ${LIB_EAY_RELEASE} ${SSL_EAY_RELEASE} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpdump rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpdump PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
 
 add_executable(rtmpsrv rtmpsrv.c thread.c thread.h)
-target_link_libraries(rtmpsrv rtmp ws2_32 winmm gdi32 ${LIB_EAY_RELEASE} ${SSL_EAY_RELEASE} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpsrv rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpsrv PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
 
 add_executable(rtmpsuck rtmpsuck.c thread.c thread.h)
-target_link_libraries(rtmpsuck rtmp ws2_32 winmm gdi32 ${LIB_EAY_RELEASE} ${SSL_EAY_RELEASE} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpsuck rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpsuck PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
 
 add_executable(rtmpgw rtmpgw.c thread.c thread.h ${GETOPT_SRCS})
-target_link_libraries(rtmpgw rtmp ws2_32 winmm gdi32 ${LIB_EAY_RELEASE} ${SSL_EAY_RELEASE} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpgw rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpgw PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
