@@ -253,14 +253,13 @@ DHInit(int nKeyBits)
   if (!dh)
     goto failed;
 
-  const BIGNUM *p;
-  const BIGNUM *g;
-  DH_get0_pqg(dh,&p,NULL,&g);
+  BIGNUM *p;
+  BIGNUM *g;
   MP_new(g);
-
   if (!g)
     goto failed;
 
+  DH_get0_pqg(dh,(const BIGNUM **)&p,NULL,NULL);
   MP_gethex(p, P1024, res);	/* prime P1024, see dhgroups.h */
   if (!res)
     {
@@ -270,6 +269,7 @@ DHInit(int nKeyBits)
   MP_set_w(g, 2);	/* base 2 */
 
   DH_set_length(dh, nKeyBits);
+  DH_set0_pqg(dh,p,NULL,g);
   return dh;
 
 failed:
@@ -291,22 +291,22 @@ DHGenerateKey(MDH *dh)
       MP_t q1 = NULL;
 
       if (!MDH_generate_key(dh))
-	return 0;
+      	return 0;
 
-      MP_gethex(q1, Q1024, res);
-      assert(res);
+    MP_gethex(q1, Q1024, res);
+    assert(res);
 
-      BIGNUM *pub_key, *priv_key, *p;
-      DH_get0_key(dh, &pub_key, &priv_key);
-      DH_get0_pqg(dh,&p,NULL,NULL);
-      res = isValidPublicKey(pub_key, p, q1);
+    BIGNUM *pub_key;
+    BIGNUM *p;
+    DH_get0_key(dh,(const BIGNUM **) &pub_key, NULL);
+    DH_get0_pqg(dh,(const BIGNUM **) &p,NULL,NULL);
+    res = isValidPublicKey(pub_key, p, q1);
 
     if (!res)
-	{
-	  MP_free(pub_key);
-	  MP_free(priv_key);
-      DH_set0_key(dh, 0, 0);
-	}
+    {
+        MP_free(pub_key);
+        DH_set0_key(dh, 0, 0);
+    }
 
       MP_free(q1);
     }
@@ -323,7 +323,7 @@ DHGetPublicKey(MDH *dh, uint8_t *pubkey, size_t nPubkeyLen)
   int len;
 
   BIGNUM *pub_key;
-  DH_get0_key(dh, &pub_key, NULL);
+  DH_get0_key(dh,(const BIGNUM **)&pub_key, NULL);
   if (!dh || !pub_key)
     return 0;
 
@@ -360,7 +360,8 @@ static int
 DHComputeSharedSecretKey(MDH *dh, uint8_t *pubkey, size_t nPubkeyLen,
 			 uint8_t *secret)
 {
-  MP_t q1 = NULL, pubkeyBn = NULL;
+  MP_t q1 = NULL;
+  MP_t pubkeyBn = NULL;
   size_t len;
   int res;
 
@@ -375,7 +376,7 @@ DHComputeSharedSecretKey(MDH *dh, uint8_t *pubkey, size_t nPubkeyLen,
   assert(len);
 
   BIGNUM *p;
-  DH_get0_pqg(dh,&p,NULL,NULL);
+  DH_get0_pqg(dh,(const BIGNUM **)&p,NULL,NULL);
 
   if (isValidPublicKey(pubkeyBn, p, q1))
     res = MDH_compute_key(secret, nPubkeyLen, pubkeyBn, dh);
