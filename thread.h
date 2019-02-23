@@ -25,16 +25,16 @@
 #ifdef WIN32
 #include <windows.h>
 #include <process.h>
-#define TFTYPE	void
+#define TFTYPE void
 #define TFRET()
-#define THANDLE	HANDLE
+#define THANDLE HANDLE
 #else
 #include <pthread.h>
-#define TFTYPE	void *
-#define TFRET()	return 0
+#define TFTYPE void*
+#define TFRET() return 0
 #define THANDLE pthread_t
 #endif
-typedef TFTYPE (thrfunc)(void *arg);
+typedef TFTYPE(thrfunc)(void* arg);
 
-THANDLE ThreadCreate(thrfunc *routine, void *args);
+THANDLE ThreadCreate(thrfunc* routine, void* args);
 #endif /* __THREAD_H__ */
