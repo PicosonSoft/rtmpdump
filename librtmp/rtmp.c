@@ -5194,17 +5194,22 @@ HTTP_read(RTMP *r, int fill)
   char *ptr;
   long hlen;
 
+restart:
   if (fill)
     RTMPSockBuf_Fill(&r->m_sb);
-
-  /* Check if socket buffer is empty or HTTP header isn't completely received */
-  memset(r->m_sb.sb_start + r->m_sb.sb_size, '\0', 1);
-  if ((!r->m_sb.sb_size) || (!strstr(r->m_sb.sb_start, "\r\n\r\n")))
+  if (r->m_sb.sb_size < 13) {
+    if (fill)
+      goto restart;
     return -2;
-
+  }
   if (strncmp(r->m_sb.sb_start, "HTTP/1.1 200 ", 13))
     return -1;
   r->m_sb.sb_start[r->m_sb.sb_size] = '\0';
+  if (!strstr(r->m_sb.sb_start, "\r\n\r\n")) {
+    if (fill)
+      goto restart;
+    return -2;
+  }
 
   ptr = r->m_sb.sb_start + sizeof("HTTP/1.1 200");
   while ((ptr = strstr(ptr, "Content-"))) {
@@ -5212,31 +5217,23 @@ HTTP_read(RTMP *r, int fill)
     ptr += 8;
   }
   if (!ptr)
-  {
-      ptr = r->m_sb.sb_start + sizeof ("HTTP/1.1 200");
-      RTMP_Log(RTMP_LOGDEBUG, "No Content-Length header found, assuming continuous stream");
-      hlen = 2147483648UL; // 2 GB
-  }
-  else
-    hlen = strtol(ptr+16, NULL, 10);
+    return -1;
+  hlen = strtol(ptr+16, NULL, 10);
+  if (hlen < 1 || hlen > INT_MAX)
+    return -1;
   ptr = strstr(ptr+16, "\r\n\r\n");
   if (!ptr)
     return -1;
   ptr += 4;
+  if (ptr + (r->m_clientID.av_val ? 1 : hlen) > r->m_sb.sb_start + r->m_sb.sb_size)
+    {
+      if (fill)
+        goto restart;
+      return -2;
+    }
   r->m_sb.sb_size -= ptr - r->m_sb.sb_start;
   r->m_sb.sb_start = ptr;
-
-  /* Stop processing if content length is 0 */
-  if (!hlen)
-    return -3;
-
-  /* Refill buffer if no payload is received */
-  if (hlen && (!r->m_sb.sb_size))
-    {
-      RTMPSockBuf_Fill(&r->m_sb);
-      ptr = r->m_sb.sb_buf;
-      r->m_sb.sb_start = ptr;
-    }
+  r->m_unackd--;
 
   if (!r->m_clientID.av_val)
     {
@@ -5256,17 +5253,10 @@ HTTP_read(RTMP *r, int fill)
       r->m_sb.sb_start++;
       r->m_sb.sb_size--;
     }
-
-  /* Following values shouldn't be negative in any case */
-  if (r->m_resplen < 0)
-    r->m_resplen = 0;
-  if (r->m_sb.sb_size < 0)
-    r->m_sb.sb_size = 0;
-
   return 0;
 }
 
-#define MAX_IGNORED_FRAMES	100
+#define MAX_IGNORED_FRAMES	50
 
 /* Read from the stream until we get a media packet.
  * Returns -3 if Play.Close/Stop, -2 if fatal error, -1 if no more media
