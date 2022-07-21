@@ -10,6 +10,11 @@ if(MSVC)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NO_POSIX_ERROR_CODES)
 	set(GETOPT_SRCS getopt.c getopt_long.c getopt.h)
 endif(MSVC)
+if(WIN32)
+	set(SYSTEM_LIBS ws2_32 winmm gdi32)
+elseif(UNIX)
+	set(SYSTEM_LIBS m)
+endif()
 
 find_package(ZLIB)
 find_package(OpenSSL)
@@ -39,25 +44,25 @@ add_library(rtmp STATIC
 	librtmp/log.h)
 	
 add_executable(rtmpdump rtmpdump.c ${GETOPT_SRCS})
-target_link_libraries(rtmpdump rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpdump rtmp ${SYSTEM_LIBS} ${OPENSSL_LIBRARIES} ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpdump PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
 
 add_executable(rtmpsrv rtmpsrv.c thread.c thread.h)
-target_link_libraries(rtmpsrv rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpsrv rtmp ${SYSTEM_LIBS} ${OPENSSL_LIBRARIES} ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpsrv PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
 
 add_executable(rtmpsuck rtmpsuck.c thread.c thread.h)
-target_link_libraries(rtmpsuck rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpsuck rtmp ${SYSTEM_LIBS} ${OPENSSL_LIBRARIES} ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpsuck PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
 
 add_executable(rtmpgw rtmpgw.c thread.c thread.h ${GETOPT_SRCS})
-target_link_libraries(rtmpgw rtmp ws2_32 winmm gdi32 ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
+target_link_libraries(rtmpgw rtmp ${SYSTEM_LIBS} ${OPENSSL_LIBRARIES} ${LIB_EAY} ${SSL_EAY} ${ZLIB_LIBRARY})
 set_target_properties(rtmpgw PROPERTIES
     COMPILE_FLAGS "-DRTMPDUMP_VERSION=\\\"v2.4\\\""
 )
